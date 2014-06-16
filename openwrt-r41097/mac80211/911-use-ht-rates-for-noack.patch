@@ -1,0 +1,59 @@
+From 76b138dec6a287bfac011c22060e061941e423d8 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 13 Jun 2014 14:47:11 +0200
+Subject: [PATCH 2/3] 911-use-ht-rates-for-noack.patch
+
+---
+ net/mac80211/rc80211_minstrel_ht.c | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index f77baec..972212b 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -766,6 +766,32 @@ minstrel_ht_check_cck_shortpreamble(struct minstrel_priv *mp,
+ 	mi->groups[MINSTREL_CCK_GROUP].supported = supported;
+ }
+ 
++static bool rate_control_send_noack(struct ieee80211_sta *sta,
++				    struct ieee80211_tx_rate_control *txrc,
++				    struct minstrel_priv *mp)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
++	struct ieee80211_tx_rate *rate = info->control.rates;
++	int i;
++
++        if (info->flags & IEEE80211_TX_CTL_NO_ACK) {
++		if (mp->fixed_rate_idx != -1) {
++			rate[0].idx = mp->fixed_rate_idx;
++			rate[0].flags = IEEE80211_TX_RC_MCS;
++			rate[0].count = 1;
++
++			for (i = 1; i < IEEE80211_TX_MAX_RATES; i++) {
++				rate[i].idx = -1;
++				rate[i].count = 0;
++			}
++
++			return true;
++		}
++	}
++
++	return false;
++}
++
+ static void
+ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+                      struct ieee80211_tx_rate_control *txrc)
+@@ -778,6 +804,9 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	struct minstrel_priv *mp = priv;
+ 	int sample_idx;
+ 
++	if (rate_control_send_noack(sta, txrc, mp))
++		return;
++
+ 	if (rate_control_send_low(sta, priv_sta, txrc))
+ 		return;
+ 
+-- 
+2.0.0
+
