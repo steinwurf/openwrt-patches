@@ -1,0 +1,26 @@
+From f30fc143a9cdb023703f5a84c5142f56da275d86 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Wed, 11 Jun 2014 16:56:16 +0200
+Subject: [PATCH 2/2] Enable TX/RX flow control for SoC ethernet MAC
+
+---
+ .../ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c     | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/target/linux/ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c b/target/linux/ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c
+index d010373..e844850 100644
+--- a/target/linux/ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c
++++ b/target/linux/ar71xx/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c
+@@ -404,7 +404,8 @@ static void ag71xx_dma_reset(struct ag71xx *ag)
+ }
+ 
+ #define MAC_CFG1_INIT	(MAC_CFG1_RXE | MAC_CFG1_TXE | \
+-			 MAC_CFG1_SRX | MAC_CFG1_STX)
++			 MAC_CFG1_SRX | MAC_CFG1_STX | \
++			 MAC_CFG1_RFC | MAC_CFG1_TFC)
+ 
+ #define FIFO_CFG0_INIT	(FIFO_CFG0_ALL << FIFO_CFG0_ENABLE_SHIFT)
+ 
+-- 
+2.0.0
+
