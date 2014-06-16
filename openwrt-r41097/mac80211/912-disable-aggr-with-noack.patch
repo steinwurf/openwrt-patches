@@ -1,0 +1,26 @@
+From 2b0b175ea3f0a595e6f627babad2ec0b60473591 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 13 Jun 2014 17:32:25 +0200
+Subject: [PATCH 3/3] 912-disable-aggr-with-noack.patch
+
+---
+ net/mac80211/agg-tx.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index ce9633a..13e172e 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -520,6 +520,9 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 	    (local->hw.flags & IEEE80211_HW_TX_AMPDU_SETUP_IN_HW))
+ 		return -EINVAL;
+ 
++	if (sdata->noack_map & BIT(tid))
++		return -EINVAL;
++
+ 	ht_dbg(sdata, "Open BA session requested for %pM tid %u\n",
+ 	       pubsta->addr, tid);
+ 
+-- 
+2.0.0
+
