@@ -1,0 +1,45 @@
+From f0441b00d1216f686aa4a1aede3a0d73fb5b835a Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Fri, 13 Jun 2014 10:10:05 +0000
+Subject: [PATCH] mac80211: fix disabling of 802.11n features
+
+r40682 ("mac80211: clean up ht capability handling, drop the use of the
+ht_capab list, use individual variables instead") removed the ht_capab list and
+replaced it with optional variables to disable features for a phy. But these
+variables weren't added in drv_mac80211_init_device_config and thus didn't make
+any difference when modifying /etc/config/wireless.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+---
+ package/kernel/mac80211/files/lib/netifd/wireless/mac80211.sh | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/package/kernel/mac80211/files/lib/netifd/wireless/mac80211.sh b/package/kernel/mac80211/files/lib/netifd/wireless/mac80211.sh
+index b19b928..a9f9db1 100644
+--- a/package/kernel/mac80211/files/lib/netifd/wireless/mac80211.sh
++++ b/package/kernel/mac80211/files/lib/netifd/wireless/mac80211.sh
+@@ -37,6 +37,12 @@ drv_mac80211_init_device_config() {
+ 		rx_antenna_pattern \
+ 		tx_antenna_pattern
+ 	config_add_int vht_max_a_mpdu_len_exp vht_max_mpdu vht_link_adapt vht160 rx_stbc tx_stbc
++	config_add_boolean \
++		ldpc \
++		greenfield \
++		short_gi_20 \
++		short_gi_40 \
++		dsss_cck_40
+ }
+ 
+ drv_mac80211_init_iface_config() {
+@@ -121,7 +127,7 @@ mac80211_hostapd_setup_base() {
+ 
+ 		json_get_vars \
+ 			ldpc:1 \
+-			greenfield:1 \
++			greenfield:0 \
+ 			short_gi_20:1 \
+ 			short_gi_40:1 \
+ 			tx_stbc:1 \
+-- 
+2.0.0
+
