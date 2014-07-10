@@ -1,0 +1,32 @@
+From b2b3c1ab34d21cad5c2811c5b6f115d279b2abc7 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 10 Jul 2014 13:53:35 +0200
+Subject: [PATCH] mac80211: Fix config variable name for dtim_period
+
+The vif option dtim_period was accidently renamed dtim_interval in r38988
+("netifd: add wireless configuration support and port mac80211 to the new
+framework"). This is wrong and makes the dtim_period/dtim_interval a dead
+option because the rest of the config generation code still uses dtim_period.
+
+Reported-by: Jeppe Ledet-Pedersen <jlp@steinwurf.com>
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+---
+ package/kernel/mac80211/files/lib/netifd/wireless/mac80211.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/package/kernel/mac80211/files/lib/netifd/wireless/mac80211.sh b/package/kernel/mac80211/files/lib/netifd/wireless/mac80211.sh
+index a9f9db1..64b0f98 100644
+--- a/package/kernel/mac80211/files/lib/netifd/wireless/mac80211.sh
++++ b/package/kernel/mac80211/files/lib/netifd/wireless/mac80211.sh
+@@ -53,7 +53,7 @@ drv_mac80211_init_iface_config() {
+ 	config_add_boolean wds powersave
+ 	config_add_int maxassoc
+ 	config_add_int max_listen_int
+-	config_add_int dtim_interval
++	config_add_int dtim_period
+ 
+ 	# mesh
+ 	config_add_string mesh_id
+-- 
+2.0.1
+
