@@ -1,0 +1,85 @@
+From 388c52f42cde75ec4bd0fc5cc5ffdcbcd42348cd Mon Sep 17 00:00:00 2001
+From: Jeppe Ledet-Pedersen <jlp@steinwurf.com>
+Date: Thu, 10 Jul 2014 16:21:32 +0200
+Subject: [PATCH] mac80211: allow ignoring powersave for multicast frames
+
+Signed-off-by: Jeppe Ledet-Pedersen <jlp@steinwurf.com>
+---
+ net/mac80211/debugfs_netdev.c | 26 ++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h    |  1 +
+ net/mac80211/tx.c             |  3 +++
+ 3 files changed, 30 insertions(+)
+
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 3da74ae..e79f7c8 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -431,6 +431,31 @@ IEEE80211_IF_FILE(num_mcast_sta, u.ap.num_mcast_sta, ATOMIC);
+ IEEE80211_IF_FILE(num_sta_ps, u.ap.ps.num_sta_ps, ATOMIC);
+ IEEE80211_IF_FILE(dtim_count, u.ap.ps.dtim_count, DEC);
+ 
++static ssize_t ieee80211_if_fmt_ignore_multicast_ps(
++	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
++{
++	return snprintf(buf, buflen, "%d\n", sdata->u.ap.ps.ignore_multicast_ps);
++}
++
++static ssize_t ieee80211_if_parse_ignore_multicast_ps(
++	struct ieee80211_sub_if_data *sdata, const char *buf, int buflen)
++{
++	unsigned long val;
++	int ret;
++
++	ret = kstrtoul(buf, 0, &val);
++	if (ret)
++		return -EINVAL;
++
++	if (val > 1)
++		return -ERANGE;
++
++	sdata->u.ap.ps.ignore_multicast_ps = val;
++
++	return buflen;
++}
++IEEE80211_IF_FILE_RW(ignore_multicast_ps);
++
+ static ssize_t ieee80211_if_fmt_num_buffered_multicast(
+ 	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
+ {
+@@ -592,6 +617,7 @@ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_ADD_MODE(smps, 0600);
+ 	DEBUGFS_ADD(num_sta_ps);
+ 	DEBUGFS_ADD(dtim_count);
++	DEBUGFS_ADD_MODE(ignore_multicast_ps, 0600);
+ 	DEBUGFS_ADD(num_buffered_multicast);
+ 	DEBUGFS_ADD_MODE(tkip_mic_test, 0200);
+ }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0b435a3..5486eca 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -252,6 +252,7 @@ struct ps_data {
+ 	atomic_t num_sta_ps; /* number of stations in PS mode */
+ 	int dtim_count;
+ 	bool dtim_bc_mc;
++	bool ignore_multicast_ps;
+ };
+ 
+ struct ieee80211_if_ap {
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 8358440..cd408c6 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -403,6 +403,9 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
+ 			return TX_CONTINUE;
+ 
+ 		ps = &tx->sdata->bss->ps;
++		/* Always transmit if ignoring powersave */
++		if (ps->ignore_multicast_ps)
++			return TX_CONTINUE;
+ 	} else if (ieee80211_vif_is_mesh(&tx->sdata->vif)) {
+ 		ps = &tx->sdata->u.mesh.ps;
+ 	} else {
+-- 
+2.0.0
+
